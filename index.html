@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de coordenadas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.5/proj4.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            background-color: #ADD8E6;
+            font-family: Calibri, sans-serif;
+        }
+
+        label {
+            font-family: Calibri, sans-serif;
+        }
+
+        #coordX,
+        #coordY,
+        #latitud,
+        #longitud {
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        #exportButton,
+        #copyButton,
+        #processButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: blue;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #exportButton:hover,
+        #copyButton:hover,
+        #processButton:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Generador automático de mapas de pedidos de mantenimiento de SGD para mapas de Google</h1>
+    <h2>Genera automáticamente un archivo KMZ a partir de un archivo .CSV o .XLSX exportado desde SGD</h2>
+    <h4>(Los archivos exportados deben contener las coordenadas X e Y ("Nox" y "Noy"))</h4>
+    <h5>Autores: Leandro Vera</h5>
+    <h2>Subir archivo</h2>
+    <input type="file" id="fileInput" accept=".csv, .xlsx" onchange="handleFileChange()"><br><br>
+    <button id="processButton" onclick="procesarArchivo()">Procesar</button><br><br>
+    <button id="copyButton" onclick="copiarTabla()">Copiar Tabla</button><br><br>
+    <h2>Resultados de la conversión</h2>
+    <table id="resultTable">
+        <thead>
+            <tr></tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <label for="nameFieldSelect">Seleccionar el campo a mostrar en el mapa:</label>
+    <select id="nameFieldSelect"></select><br><br>
+    <button id="exportButton" onclick="exportarAKMZ()">Exportar a KMZ</button>
+
+    <script>
+        var projectionFrom = '+proj=tmerc +lat_0=-90 +lon_0=-60 +k=1 +x_0=5500000 +y_0=0 +ellps=intl +towgs84=-148,136,90,0,0,0,0 +units=m +no_defs';
+        var projectionTo = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs';
+
+        function handleFileChange() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const processButton = document.getElementById('processButton');
+            if (file.name.endsWith('.csv')) {
+                processButton.textContent = "Procesar CSV";
+            } else if (file.name.endsWith('.xlsx')) {
+                processButton.textContent = "Procesar XLSX";
+            }
+        }
+
+        function procesarArchivo() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (file.name.endsWith('.csv')) {
+                procesarArchivoCSV();
+            } else if (file.name.endsWith('.xlsx')) {
+                procesarArchivoExcel();
+            } else {
+                alert("Por favor, sube un archivo CSV o XLSX.");
+            }
+        }
+
+        function procesarArchivoCSV() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Por favor, sube un archivo CSV.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const text = e.target.result;
+                const rows = text.split("\n").map(row => row.split(";").map(cell => cell.trim()));
+
+                const resultTableBody = document.getElementById('resultTable').querySelector('tbody');
+                const resultTableHead = document.getElementById('resultTable').querySelector('thead tr');
+                resultTableBody.innerHTML = '';
+                resultTableHead.innerHTML = '';
+
+                if (rows.length <= 1) { return; }
+
+                const headerRow = rows[0];
+                let coordXIndex = -1, coordYIndex = -1;
+                let dateColumns = [];
+
+                headerRow.forEach((cell, index) => {
+                    if (cell.toUpperCase().includes('X') && coordXIndex === -1) {
+                        coordXIndex = index;
+                    }
+                    if (cell.toUpperCase().includes('Y') && coordYIndex === -1) {
+                        coordYIndex = index;
+                    }
+                    if (cell.toUpperCase().includes('DATA') || cell.toUpperCase().includes('FECHA')) {
+                        dateColumns.push(index);
+                    }
+                });
+
+                if (coordXIndex === -1 || coordYIndex === -1) {
+                    alert("No se pudieron encontrar las columnas de coordenadas X e Y en el archivo CSV.");
+                    return;
+                }
+
+                headerRow.forEach(cell => {
+                    const th = document.createElement('th');
+                    th.textContent = cell;
+                    resultTableHead.appendChild(th);
+                });
+
+                resultTableHead.innerHTML += `<th>Latitud Convertida</th>
+                                               <th>Longitud Convertida</th>
+                                               <th>Latitud (Decimal)</th>
+                                               <th>Longitud (Decimal)</th>`;
+
+                // Procesar las filas
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (row.length < Math.max(coordXIndex + 1, coordYIndex + 1)) { continue; }
+
+                    const coordX = parseFloat(row[coordXIndex].replace(',', '.'));
+                    const coordY = parseFloat(row[coordYIndex].replace(',', '.'));
+
+                    if (isNaN(coordX) || isNaN(coordY)) { continue; }
+
+                    const coordsTarget = proj4(projectionFrom, projectionTo).forward([coordX, coordY]);
+                    const latitudDecimal = coordsTarget[1].toFixed(6);
+                    const longitudDecimal = coordsTarget[0].toFixed(6);
+
+                    const latitud = convertirAGradosMinutosSegundos(coordsTarget[1], 'latitud');
+                    const longitud = convertirAGradosMinutosSegundos(coordsTarget[0], 'longitud');
+
+                    const newRow = document.createElement('tr');
+                    row.forEach((cell, index) => {
+                        const td = document.createElement('td');
+                        // Intentar convertir fechas si es necesario
+                        if (dateColumns.includes(index)) {
+                            let dateValue = cell.replace(',', '.');
+                            let dateNumber = parseFloat(dateValue);
+                            if (!isNaN(dateNumber)) {
+                                let jsDate = XLSX.SSF.parse_date_code(dateNumber);
+                                let day = jsDate.d.toString().padStart(2, '0');
+                                let month = jsDate.m.toString().padStart(2, '0');
+                                let year = jsDate.y.toString();
+                                td.textContent = `${day}/${month}/${year}`;
+                            } else {
+                                td.textContent = cell.replace(/"/g, ''); // Eliminar comillas
+                            }
+                        } else {
+                            td.textContent = cell.replace(/"/g, ''); // Eliminar comillas
+                        }
+                        newRow.appendChild(td);
+                    });
+
+                    newRow.innerHTML += `<td>${latitud}</td>
+                                         <td>${longitud}</td>
+                                         <td>${latitudDecimal}</td>
+                                         <td>${longitudDecimal}</td>`;
+
+                    resultTableBody.appendChild(newRow);
+                }
+                actualizarSelector(headerRow, coordXIndex, coordYIndex);
+            };
+
+            reader.onerror = function () { alert("Hubo un error al leer el archivo."); };
+            reader.readAsText(file, 'ISO-8859-1');
+        }
+
+        function procesarArchivoExcel() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                const sheetName = workbook.SheetNames[0];
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+
+                const resultTableBody = document.getElementById('resultTable').querySelector('tbody');
+                const resultTableHead = document.getElementById('resultTable').querySelector('thead tr');
+                resultTableBody.innerHTML = '';
+                resultTableHead.innerHTML = '';
+
+                if (rows.length <= 1) { return; }
+
+                const headerRow = rows[0];
+                let coordXIndex = -1, coordYIndex = -1;
+                let dateColumns = [];
+
+                headerRow.forEach((cell, index) => {
+                    if (cell.toUpperCase().includes('X') && coordXIndex === -1) {
+                        coordXIndex = index;
+                    }
+                    if (cell.toUpperCase().includes('Y') && coordYIndex === -1) {
+                        coordYIndex = index;
+                    }
+                    if (cell.toUpperCase().includes('DATA') || cell.toUpperCase().includes('FECHA')) {
+                        dateColumns.push(index);
+                    }
+                });
+
+                if (coordXIndex === -1 || coordYIndex === -1) {
+                    alert("No se pudieron encontrar las columnas de coordenadas X e Y en el archivo Excel.");
+                    return;
+                }
+
+                headerRow.forEach(cell => {
+                    const th = document.createElement('th');
+                    th.textContent = cell;
+                    resultTableHead.appendChild(th);
+                });
+
+                resultTableHead.innerHTML += `<th>Latitud Convertida</th>
+                                               <th>Longitud Convertida</th>
+                                               <th>Latitud (Decimal)</th>
+                                               <th>Longitud (Decimal)</th>`;
+
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (row.length < Math.max(coordXIndex + 1, coordYIndex + 1)) { continue; }
+
+                    const coordX = parseFloat(row[coordXIndex]);
+                    const coordY = parseFloat(row[coordYIndex]);
+
+                    if (isNaN(coordX) || isNaN(coordY)) { continue; }
+
+                    const coordsTarget = proj4(projectionFrom, projectionTo).forward([coordX, coordY]);
+                    const latitudDecimal = coordsTarget[1].toFixed(6);
+                    const longitudDecimal = coordsTarget[0].toFixed(6);
+
+                    const latitud = convertirAGradosMinutosSegundos(coordsTarget[1], 'latitud');
+                    const longitud = convertirAGradosMinutosSegundos(coordsTarget[0], 'longitud');
+
+                    const newRow = document.createElement('tr');
+
+                    row.forEach((cell, index) => {
+                        const td = document.createElement('td');
+                        // Si esta celda es de una columna de fecha, convertirla
+                        if (dateColumns.includes(index)) {
+                            let dateValue = cell;
+                            if (typeof dateValue === 'number') {
+                                let jsDate = XLSX.SSF.parse_date_code(dateValue);
+                                let day = jsDate.d.toString().padStart(2, '0');
+                                let month = jsDate.m.toString().padStart(2, '0');
+                                let year = jsDate.y.toString();
+                                td.textContent = `${day}/${month}/${year}`;
+                            } else {
+                                td.textContent = cell; // Si no es número, dejar como está
+                            }
+                        } else {
+                            td.textContent = cell; // Sin cambio en la celda
+                        }
+                        newRow.appendChild(td);
+                    });
+
+                    newRow.innerHTML += `<td>${latitud}</td>
+                                         <td>${longitud}</td>
+                                         <td>${latitudDecimal}</td>
+                                         <td>${longitudDecimal}</td>`; 
+
+                    resultTableBody.appendChild(newRow);
+                }
+
+                actualizarSelector(headerRow, coordXIndex, coordYIndex);
+            };
+
+            reader.onerror = function () { alert("Hubo un error al leer el archivo."); };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function actualizarSelector(headerRow, coordXIndex, coordYIndex) {
+            const nameFieldSelect = document.getElementById('nameFieldSelect');
+            nameFieldSelect.innerHTML = ''; // Limpiar opciones previas
+
+            headerRow.forEach((cell, index) => {
+                if (index !== coordXIndex && index !== coordYIndex) {
+                    const option = document.createElement('option');
+                    option.value = cell;
+                    option.textContent = cell;
+                    nameFieldSelect.appendChild(option);
+                }
+            });
+
+            nameFieldSelect.value = headerRow[0];
+        }
+
+        function convertirAGradosMinutosSegundos(coordenada, tipo) {
+            var direccion = '';
+            if (tipo === 'latitud') { direccion = coordenada < 0 ? 'S' : 'N'; }
+            else if (tipo === 'longitud') { direccion = coordenada < 0 ? 'O' : 'E'; }
+            coordenada = Math.abs(coordenada);
+            var grados = Math.floor(coordenada);
+            var minutosDecimal = (coordenada - grados) * 60;
+            var minutos = Math.floor(minutosDecimal);
+            var segundos = ((minutosDecimal - minutos) * 60).toFixed(1);
+            return `${grados}°${minutos}'${segundos}"${direccion}`;
+        }
+
+        function copiarTabla() {
+            const table = document.getElementById('resultTable');
+            const rows = table.querySelectorAll('tr');
+            let csvContent = '';
+
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td, th');
+                const rowData = Array.from(cols).map((cell) => {
+                    let cellContent = cell.textContent.trim().replace(/\n/g, ' ');
+                    if (!isNaN(cellContent)) {
+                        return cellContent.replace('.', ',');
+                    }
+                    return cellContent;
+                }).join(';');
+                csvContent += rowData + '\n';
+            });
+
+            navigator.clipboard.writeText(csvContent)
+                .then(() => {
+                    alert("Tabla copiada al portapapeles!");
+                })
+                .catch(err => {
+                    alert("Error al copiar la tabla: ", err);
+                });
+        }
+
+        function exportarAKMZ() {
+            const table = document.getElementById('resultTable');
+            const rows = table.querySelectorAll('tr');
+            const selectedField = document.getElementById('nameFieldSelect').value;
+
+            // Localiza el índice de la columna del campo seleccionado
+            const selectedFieldIndex = Array.from(rows[0].querySelectorAll('th')).findIndex(th => th.textContent === selectedField);
+
+            let kmlContent = '<?xml version="1.0" encoding="UTF-8"?>\n';
+            kmlContent += '<kml xmlns="http://www.opengis.net/kml/2.2"> \n';
+            kmlContent += '<Document>\n';
+            kmlContent += '<Style id="myPoint">\n';
+            kmlContent += ' <IconStyle>\n';
+            kmlContent += '   <Icon>\n';
+            kmlContent += '     <href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href>\n';
+            kmlContent += '   </Icon>\n';
+            kmlContent += ' </IconStyle>\n';
+            kmlContent += '</Style>\n';
+            kmlContent += '<name>Coordenadas Convertidas</name>\n';
+
+            const headers = Array.from(rows[0].querySelectorAll('th')).map(th => th.textContent);
+
+            rows.forEach((row, index) => {
+                if (index === 0) return; // Saltar la fila de encabezado
+                const cells = row.querySelectorAll('td');
+
+                // Asegurarse de extraer correctamente las coordenadas de las columnas adecuadas
+                let latitudDecimal = parseFloat(cells[cells.length - 2].textContent.replace(',', '.')); // Latitud (Decimal)
+                let longitudDecimal = parseFloat(cells[cells.length - 1].textContent.replace(',', '.')); // Longitud (Decimal)
+
+                const campoName = cells[selectedFieldIndex].textContent;
+
+                let description = [];
+                for (let i = 0; i < cells.length - 4; i++) {
+                    description.push(`${headers[i]}: ${cells[i].textContent}`);
+                }
+                const descriptionText = description.join('\n');
+
+                kmlContent += ' <Placemark>\n';
+                kmlContent += ` <name>${campoName}</name>\n`;
+                kmlContent += ` <description>${descriptionText}</description>\n`;
+                kmlContent += ' <styleUrl>#myPoint</styleUrl>\n';
+                kmlContent += ' <Point>\n';
+                kmlContent += ` <coordinates>${longitudDecimal.toFixed(6)},${latitudDecimal.toFixed(6)},0</coordinates>\n`;
+                kmlContent += ' </Point>\n';
+                kmlContent += ' </Placemark>\n';
+            });
+
+            kmlContent += '</Document>\n';
+            kmlContent += '</kml>';
+
+            const zip = new JSZip();
+            zip.file('doc.kml', kmlContent);
+            zip.generateAsync({ type: 'blob' }).then((content) => {
+                saveAs(content, 'Coordenadas_Convertidas.kmz');
+            });
+        }
+    </script>
+</body>
+
+</html>

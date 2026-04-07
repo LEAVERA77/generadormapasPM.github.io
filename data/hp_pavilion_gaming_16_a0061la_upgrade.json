@@ -1,0 +1,31 @@
+{
+  "equipo": {
+    "modelo": "HP Pavilion Gaming 16-a0061la",
+    "numero_serie": "5CD1308Y54"
+  },
+  "almacenamiento": {
+    "slots_m2": 1,
+    "ocupado_por": "Intel Optane H10",
+    "accion_recomendada": "Reemplazar el Optane H10 por un M.2 NVMe de 2TB",
+    "nota": "Solo hay 1 slot M.2. No es posible agregar un segundo M.2, se debe reemplazar el existente.",
+    "modulo_recomendado": "M.2 NVMe 2TB"
+  },
+  "memoria_ram": {
+    "slots_sodimm": 2,
+    "capacidad_maxima_gb": 64,
+    "configuracion_recomendada": "2 x 16GB DDR4-3200",
+    "total_recomendado_gb": 32,
+    "advertencia": "Sin actualización de firmware, el máximo reconocido puede ser 16GB. Actualizar BIOS antes de comprar RAM.",
+    "referencia": "Usuario del mismo modelo logró 32GB (2x16GB) luego de actualizar el firmware."
+  },
+  "pasos_recomendados": [
+    "1. Descargar y actualizar el firmware de la BIOS desde la página oficial de HP usando el número de serie 5CD1308Y54.",
+    "2. Reemplazar el módulo Intel Optane H10 por un M.2 NVMe de 2TB.",
+    "3. Instalar 2 módulos DDR4-3200 de 16GB en los dos slots SODIMM."
+  ],
+  "resultado_esperado": {
+    "ram_gb": 32,
+    "almacenamiento_tb": 2,
+    "descripcion": "32GB RAM + 2TB NVMe — salto significativo para desarrollo."
+  }
+}

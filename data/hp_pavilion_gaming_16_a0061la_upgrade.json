@@ -24,42 +24,43 @@
     "3. Instalar 2 módulos DDR4-3200 de 16GB en los dos slots SODIMM."
   ],
   "proceso_reemplazo_nvme": {
+    "metodo": "Clonación — no requiere reinstalar Windows ni programas",
+    "requisito_extra": "Gabinete USB M.2 NVMe (adaptador USB para M.2) — buscar en Mercado Libre 'gabinete M.2 NVMe USB'",
+    "herramienta_clonacion": "Macrium Reflect Free — https://www.macrium.com/reflectfree",
     "etapa_1_preparacion": [
-      "Crear USB booteable con Windows 11 usando la herramienta oficial: https://www.microsoft.com/software-download/windows11",
-      "USB de mínimo 8GB",
-      "Anotar o fotografiar licencia de Windows (Win+R → slmgr /dlv) aunque en equipos HP suele estar en la BIOS",
-      "Hacer backup de todos los archivos importantes a disco externo o nube",
-      "Descargar drivers desde soporte HP con N/S 5CD1308Y54: chipset, red WiFi, gráfica, audio"
+      "Descargar Macrium Reflect Free desde macrium.com",
+      "Hacer backup de archivos importantes por precaución",
+      "Tener el gabinete M.2 USB con el NVMe nuevo conectado por USB"
     ],
-    "etapa_2_hardware": [
-      "Apagar la notebook completamente",
-      "Desconectar el cargador",
-      "Quitar la tapa trasera (tornillos Phillips)",
-      "Desconectar la batería del conector de la placa (importante)",
-      "Localizar el slot M.2 con el Optane H10",
-      "Quitar el tornillo que sujeta el módulo",
-      "Extraer el Optane H10 en ángulo de 30 grados",
-      "Insertar el NVMe nuevo en el mismo ángulo",
-      "Colocar y apretar el tornillo",
-      "Reconectar la batería",
-      "Cerrar la tapa"
+    "etapa_2_desactivar_optane": [
+      "Abrir 'Intel Optane Memory and Storage Management' desde el menú inicio",
+      "Seleccionar 'Disable Intel Optane Memory'",
+      "Confirmar y reiniciar — el disco queda visible como NVMe normal"
     ],
-    "etapa_3_instalacion_windows": [
-      "Conectar el USB booteable",
-      "Encender la notebook y presionar F9 para el menú de arranque",
-      "Seleccionar el USB",
-      "Seguir el asistente de instalación de Windows",
-      "Elegir 'Instalación personalizada'",
-      "El NVMe nuevo aparecerá como espacio sin asignar — seleccionarlo e instalar"
+    "etapa_3_clonar": [
+      "Conectar el NVMe nuevo en el gabinete USB a la notebook",
+      "Abrir Macrium Reflect → 'Clone this disk' sobre el disco actual",
+      "Seleccionar el NVMe nuevo (USB) como destino",
+      "Macrium ajusta particiones automáticamente al tamaño mayor (2TB)",
+      "Iniciar clon — tarda 20-40 minutos",
+      "NO reiniciar al terminar"
     ],
-    "etapa_4_post_instalacion": [
-      "Instalar drivers descargados previamente (chipset primero, luego el resto)",
-      "Activar Windows (debería activarse automáticamente con la licencia de la BIOS)",
-      "Instalar HP Support Assistant desde hp.com",
-      "Actualizar BIOS si corresponde",
-      "Reinstalar programas: Cursor, Android Studio, etc."
+    "etapa_4_intercambio_fisico": [
+      "Apagar completamente",
+      "Abrir tapa trasera (tornillos Phillips)",
+      "Desconectar la batería del conector de la placa",
+      "Extraer el Optane H10 del slot M.2 en ángulo de 30 grados",
+      "Guardar el Optane H10 en el gabinete USB (queda como disco externo)",
+      "Insertar el NVMe nuevo en el slot M.2",
+      "Reconectar batería → cerrar tapa"
     ],
-    "herramienta_descarga_windows": "https://www.microsoft.com/software-download/windows11"
+    "etapa_5_primer_arranque": [
+      "Encender la notebook — Windows arranca normalmente",
+      "Abrir Administración de discos (Win+X)",
+      "Clic derecho sobre C: → 'Extender volumen' → aceptar",
+      "C: pasa a ocupar los 2TB completos"
+    ],
+    "resultado": "Todo el sistema migrado intacto: Windows, programas, configuraciones. El Optane H10 queda reutilizable como disco externo USB."
   },
   "resultado_esperado": {
     "ram_gb": 32,

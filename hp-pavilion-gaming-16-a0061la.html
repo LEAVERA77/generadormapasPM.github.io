@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HP Pavilion Gaming 16-a0061la — Almacenamiento y memoria</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .hw-page {
+            max-width: 52rem;
+            margin: 0 auto;
+            font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+            line-height: 1.5;
+        }
+
+        .hw-page h1 {
+            color: #1a1a2e;
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .hw-page .meta {
+            color: #555;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .hw-page h2 {
+            color: #16213e;
+            font-size: 1.15rem;
+            margin-top: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .hw-page ul {
+            margin: 0.5rem 0 0 1.25rem;
+        }
+
+        .hw-page li {
+            margin-bottom: 0.35rem;
+        }
+
+        .hw-page .note {
+            background: #f0f4f8;
+            border-left: 4px solid #5c6ac4;
+            padding: 0.75rem 1rem;
+            margin: 1rem 0;
+        }
+
+        .hw-page .target {
+            background: #e8f5e9;
+            border-left: 4px solid #2e7d32;
+            padding: 0.75rem 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .hw-page a {
+            color: #1565c0;
+        }
+
+        .hw-back {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <article class="hw-page">
+        <h1>HP Pavilion Gaming 16-a0061la</h1>
+        <p class="meta">Referencia de almacenamiento y RAM · Número de serie documentado: <strong>5CD1308Y54</strong></p>
+
+        <h2>Slots M.2</h2>
+        <ul>
+            <li><strong>Un solo slot M.2</strong>, actualmente ocupado por el módulo <strong>Intel Optane Memory H10</strong>.</li>
+            <li>Para instalar un SSD M.2 NVMe de 2&nbsp;TB hay que <strong>reemplazar</strong> el Optane; no se puede añadir un segundo M.2 en paralelo en este modelo.</li>
+            <li>Al reemplazar el Optane se pierde la función de caché Optane; con más RAM el beneficio práctico del Optane como buffer suele ser menor.</li>
+        </ul>
+
+        <h2>RAM (SODIMM)</h2>
+        <ul>
+            <li><strong>2 ranuras SODIMM</strong>.</li>
+            <li>Capacidad máxima según especificación: <strong>hasta 64&nbsp;GB</strong> (combinación de módulos compatibles).</li>
+            <li><strong>Importante:</strong> en el mismo modelo, usuarios reportan que sin <strong>actualizar el firmware de la BIOS</strong> el sistema puede reconocer como máximo <strong>16&nbsp;GB</strong>; tras actualizar la BIOS lograron <strong>2×16&nbsp;GB = 32&nbsp;GB</strong> estables.</li>
+        </ul>
+
+        <div class="note">
+            <strong>Antes de comprar RAM:</strong> actualizar la BIOS desde el sitio de HP usando el número de serie (o el identificador de producto) para obtener el paquete correcto para <strong>16-a0061la</strong>.
+        </div>
+
+        <h2>Recomendación concreta (resumen)</h2>
+        <ol>
+            <li>Actualizar <strong>firmware de la BIOS</strong> desde HP (con serie <strong>5CD1308Y54</strong> o la herramienta de detección del equipo).</li>
+            <li>Reemplazar el <strong>Optane H10</strong> por un <strong>M.2 NVMe de 2&nbsp;TB</strong> (formato compatible con el zócalo del equipo, normalmente M.2 2280 NVMe).</li>
+            <li>Instalar <strong>2×16&nbsp;GB DDR4-3200</strong> en las dos ranuras SODIMM.</li>
+        </ol>
+
+        <div class="target">
+            <strong>Configuración objetivo para desarrollo:</strong> 32&nbsp;GB de RAM + 2&nbsp;TB NVMe — salto grande en espacio y multitarea frente a la configuración original con Optane y límites de RAM sin BIOS actualizada.
+        </div>
+
+        <p class="hw-back"><a href="index.html">Volver al generador de mapas (KMZ)</a></p>
+    </article>
+</body>
+
+</html>

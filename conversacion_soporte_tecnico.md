@@ -128,21 +128,47 @@ DISM /Online /Enable-Feature /FeatureName:VirtualMachinePlatform /All
 
 ## Upgrades de hardware recomendados (pendientes)
 
+### Número de serie del equipo
+`5CD1308Y54`
+
+### Slots de memoria confirmados
+- **Slots SODIMM:** 2
+- **Capacidad máxima soportada:** 64 GB
+- **Condición importante:** Actualizar BIOS a versión F32 o superior **antes** de instalar los módulos (ya realizado — versión F32 instalada)
+- Sin la actualización de BIOS, el sistema solo reconoce hasta 16 GB
+
+### Slots M.2 confirmados
+- **Cantidad:** 1 solo slot M.2 (ocupado por el Optane H10)
+- No hay un segundo slot M.2 disponible
+- Para agregar NVMe hay que **reemplazar** el Optane H10, no agregar uno nuevo
+
+### Plan de upgrade recomendado
+
+| Paso | Acción | Detalle |
+|---|---|---|
+| 1 | RAM | 2 × 16 GB DDR4 SODIMM 3200 MHz = 32 GB dual channel |
+| 2 | Almacenamiento | Reemplazar Optane H10 por M.2 NVMe 2 TB |
+| 3 | Resultado final | 32 GB RAM + 2 TB NVMe + SSD 2.5" 512 GB existente |
+
+> Con 32 GB de RAM el Optane deja de ser necesario como buffer de memoria, por lo que reemplazarlo no implica pérdida funcional.
+
 ### RAM — Prioridad alta
 - **Tipo exacto:** DDR4 SODIMM 3200 MHz
 - **Configuración objetivo:** 2 × 16 GB = 32 GB (dual channel)
 - **Marcas recomendadas:** Kingston, Crucial, Corsair
-- Actualizar BIOS a F32 o superior antes de instalar (ya realizado)
+- BIOS F32 ya instalada — listo para instalar
 - Con 32 GB: RAM pasaría de 92% a ~45% de uso con el mismo entorno de trabajo
+- **Advertencia:** Mezclar módulos de distinto tamaño (ej. 8 GB + 16 GB = 24 GB) rompe el dual channel y reduce el rendimiento — conviene comprar los dos módulos juntos
 
 ### Almacenamiento — Prioridad media
-- El slot M.2 está ocupado por el Optane H10
-- La bahía 2.5" ya tiene un SSD de 512 GB de fábrica
-- **Opción A:** Reemplazar el Optane H10 por M.2 NVMe PCIe Gen3 2280 (1 TB o 2 TB)
-  - Recomendado: **Crucial P3 Plus 1TB** (PCIe Gen4, retrocompatible con Gen3) o **Kingston NV2**
-  - Requiere clonar el disco antes con **Macrium Reflect Free** usando adaptador M.2 a USB
-  - Desactivar Optane en Intel RST antes de clonar
-- **Opción B:** Mantener Optane, reemplazar SSD 2.5" por uno más grande (SATA)
+- El único slot M.2 está ocupado por el Optane H10
+- La bahía 2.5" ya tiene un SSD de 512 GB de fábrica (disco G:)
+- **Opción recomendada:** Reemplazar el Optane H10 por M.2 NVMe PCIe Gen3 2280 de 2 TB
+  - Recomendado: **Crucial P3 Plus** (PCIe Gen4, retrocompatible con Gen3) o **Kingston NV2**
+  - Evitar: Patriot P300 (memoria QLC sin caché DRAM, bajo rendimiento sostenido en compilaciones)
+  - Requiere clonar el disco antes con **Macrium Reflect Free** + adaptador M.2 a USB
+  - Desactivar Optane en Intel RST **antes** de clonar
+- **Opción B:** Mantener Optane intacto, reemplazar SSD 2.5" por uno más grande (SATA)
 
 ---
 

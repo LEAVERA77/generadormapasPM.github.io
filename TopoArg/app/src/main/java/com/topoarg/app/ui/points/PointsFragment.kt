@@ -16,6 +16,8 @@ import com.topoarg.app.data.PointRepository
 import com.topoarg.app.data.SurveyPoint
 import com.topoarg.app.databinding.DialogSavePointBinding
 import com.topoarg.app.databinding.FragmentPointsBinding
+import com.topoarg.app.geoid.GeoidModel
+import com.topoarg.app.location.FixQuality
 import com.topoarg.app.util.Format
 
 class PointsFragment : Fragment() {
@@ -55,6 +57,12 @@ class PointsFragment : Fragment() {
         sb.append(getString(R.string.detail_header)).append("\n\n")
         sb.append("WGS84: ${Format.dms(p.lat, true)}  ${Format.dms(p.lon, false)}\n")
         sb.append("h elipsoidal: ${Format.m(p.altitude)}\n")
+        val undulation = GeoidModel.undulation(p.lat, p.lon)
+        if (undulation != null) {
+            sb.append("H s.n.m. (cota): ${Format.m(p.altitude - undulation)}")
+                .append("  (N geoide: ${Format.m(undulation)})\n")
+        }
+        sb.append("Solución: ${FixQuality.fromGga(p.fixQuality).label}\n")
         sb.append("Precisión: ${Format.acc(p.accuracy)} (V: ${Format.acc(p.verticalAccuracy)})\n")
         sb.append("Muestras: ${p.samples}  σ: ${Format.m(p.stdHorizontal)}\n")
         sb.append("Fecha: ${Format.dateTime(p.timestamp)}\n")

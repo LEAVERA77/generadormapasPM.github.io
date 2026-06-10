@@ -20,9 +20,17 @@ pensada para agrimensores que trabajan con los marcos de referencia argentinos.
 - **Toma instantánea de puntos** con nombre y descripción/código.
 - **Detalle de cada punto convertido a *todos* los sistemas** del catálogo a la vez.
 - **Estado GNSS**: satélites usados/visibles, precisión horizontal y vertical.
+- **Alturas ortométricas (cota s.n.m.)**: modelo de geoide embebido para todo el
+  territorio argentino (grilla EGM96 con interpolación bilineal), además de la
+  altura elipsoidal. H = h − N en pantalla, en el detalle y en las exportaciones.
+- **Receptores RTK externos por Bluetooth (NMEA 0183)**: Emlid Reach, South,
+  ComNav, Stonex, Garmin GLO y cualquier equipo que emita NMEA por puerto serie
+  Bluetooth (SPP). Se muestra y se guarda la **calidad de la solución**
+  (Autónomo / DGNSS / RTK Fijo / RTK Flotante, sentencia GGA) y la precisión
+  real reportada por el receptor (sentencia GST).
 - **Exportación y compartido** por WhatsApp/correo/Drive en:
-  - **CSV** (con Norte/Este Gauss-Krüger + lat/lon WGS84),
-  - **DXF** (AutoCAD, en coordenadas proyectadas),
+  - **CSV** (Norte/Este Gauss-Krüger + lat/lon WGS84 + h elipsoidal y H s.n.m. + calidad de fix),
+  - **DXF** (AutoCAD, en coordenadas proyectadas, Z = cota s.n.m.),
   - **KML** (Google Earth), **GPX** y **GeoJSON** (QGIS).
 - Persistencia local en SQLite; las coordenadas se guardan siempre en WGS84 y se
   convierten al vuelo, así se puede cambiar de sistema sin pérdida.
@@ -41,9 +49,29 @@ centrales -72° a -54°.
 
 ## Alturas
 
-Las alturas mostradas/exportadas son **elipsoidales (WGS84)**, tal como las
-entrega el chip GNSS del teléfono. Para cotas sobre el nivel medio del mar debe
-aplicarse el modelo de geoide del IGN (GEOIDE-Ar 16).
+La app muestra y exporta **ambas alturas**:
+
+- **h elipsoidal (WGS84)**: la que entrega el receptor GNSS.
+- **H ortométrica (cota s.n.m.)**: calculada como H = h − N, con N interpolado
+  bilinealmente de una grilla **EGM96** embebida que cubre todo el país
+  (asset `geoid_egm96_ar.grd`, lat −56°…−21°, lon −76°…−52°, paso 0,25°).
+
+EGM96 difiere del modelo oficial **GEOIDE-Ar 16** del IGN típicamente en menos
+de ±1 m. Si se dispone de la grilla oficial, puede reemplazarse el asset
+manteniendo el mismo formato de texto (header + filas de N en metros).
+
+## Receptor externo RTK (Bluetooth NMEA)
+
+En **Ajustes ▸ Fuente GNSS** se puede pasar del chip interno a un receptor
+externo emparejado por Bluetooth clásico (perfil SPP). La app parsea:
+
+- **GGA**: posición, satélites, calidad de fix (1 autónomo, 2 DGNSS,
+  4 RTK fijo, 5 RTK flotante) y alturas (h = MSL + separación del geoide).
+- **GST**: desvíos estándar de la solución → precisión horizontal real
+  (clave en RTK, donde el HDOP no refleja la precisión centimétrica).
+
+La calidad de la solución queda guardada en cada punto y se incluye en las
+exportaciones. Con un receptor RTK fijo se obtiene precisión centimétrica.
 
 ## Requisitos y compilación
 
@@ -62,16 +90,18 @@ aplicarse el modelo de geoide del IGN (GEOIDE-Ar 16).
 ```
 app/src/main/java/com/topoarg/app/
 ├── crs/        Catálogo EPSG argentino + conversor proj4j
-├── location/   Motor GNSS (FusedLocation + GnssStatus)
+├── geoid/      Modelo de geoide (grilla EGM96 + interpolación bilineal)
+├── location/   Fuentes GNSS: interna (FusedLocation) y Bluetooth NMEA (RTK)
 ├── data/       Modelo, SQLite y repositorio de puntos
 ├── export/     Generadores CSV / KML / GPX / GeoJSON / DXF
-├── settings/   Preferencias (CRS, faja automática, promediado)
+├── settings/   Preferencias (CRS, faja automática, fuente GNSS, promediado)
 ├── util/       Formato DMS / metros / fechas
 └── ui/         Medición, Puntos, Exportar, Ajustes
 ```
 
 ## Precisión
 
-La precisión está limitada por el hardware GNSS del teléfono (típicamente
-3–10 m autónomo; 1–3 m con promediado en cielo abierto). Para trabajos que
-exijan precisión geodésica debe usarse un receptor RTK externo.
+Con el GNSS interno la precisión está limitada por el hardware del teléfono
+(típicamente 3–10 m autónomo; 1–3 m con promediado en cielo abierto). Con un
+receptor RTK externo conectado por Bluetooth y solución fija, la precisión es
+la del receptor (centimétrica), que la app lee directamente de la sentencia GST.

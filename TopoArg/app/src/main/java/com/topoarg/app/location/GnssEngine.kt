@@ -5,6 +5,7 @@ import android.content.Context
 import android.location.GnssStatus
 import android.location.Location
 import android.location.LocationManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.LiveData
@@ -19,13 +20,13 @@ import com.google.android.gms.location.Priority
 data class SatelliteInfo(val usedInFix: Int, val visible: Int)
 
 /**
- * Motor GNSS: entrega posiciones a 1 Hz con máxima precisión y el estado
- * de la constelación de satélites.
+ * Motor GNSS interno del teléfono: entrega posiciones a 1 Hz con máxima
+ * precisión y el estado de la constelación de satélites.
  *
  * Quien lo use es responsable de verificar el permiso ACCESS_FINE_LOCATION
  * antes de llamar a [start].
  */
-class GnssEngine(context: Context) {
+class GnssEngine(context: Context) : GnssSource {
 
     private val appContext = context.applicationContext
     private val fused: FusedLocationProviderClient =
@@ -34,16 +35,32 @@ class GnssEngine(context: Context) {
         appContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
     private val _location = MutableLiveData<Location>()
-    val location: LiveData<Location> get() = _location
+    override val location: LiveData<Location> get() = _location
 
     private val _satellites = MutableLiveData(SatelliteInfo(0, 0))
-    val satellites: LiveData<SatelliteInfo> get() = _satellites
+    override val satellites: LiveData<SatelliteInfo> get() = _satellites
+
+    private val _fixQuality = MutableLiveData(FixQuality.UNKNOWN)
+    override val fixQuality: LiveData<FixQuality> get() = _fixQuality
+
+    private val _status = MutableLiveData("GNSS interno del teléfono")
+    override val status: LiveData<String> get() = _status
 
     private var running = false
 
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
-            result.lastLocation?.let { _location.value = it }
+            result.lastLocation?.let { loc ->
+                _location.value = loc
+                val mock = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    loc.isMock
+                } else {
+                    @Suppress("DEPRECATION")
+                    loc.isFromMockProvider
+                }
+                _fixQuality.value =
+                    if (mock) FixQuality.EXTERNAL_MOCK else FixQuality.AUTONOMOUS
+            }
         }
     }
 
@@ -58,7 +75,7 @@ class GnssEngine(context: Context) {
     }
 
     @SuppressLint("MissingPermission")
-    fun start() {
+    override fun start() {
         if (running) return
         running = true
         val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000L)
@@ -70,7 +87,7 @@ class GnssEngine(context: Context) {
         locationManager.registerGnssStatusCallback(gnssCallback, Handler(Looper.getMainLooper()))
     }
 
-    fun stop() {
+    override fun stop() {
         if (!running) return
         running = false
         fused.removeLocationUpdates(locationCallback)

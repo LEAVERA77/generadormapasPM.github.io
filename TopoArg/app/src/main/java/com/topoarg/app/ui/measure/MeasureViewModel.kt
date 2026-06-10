@@ -5,7 +5,9 @@ import android.location.Location
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.topoarg.app.location.BluetoothNmeaSource
 import com.topoarg.app.location.GnssEngine
+import com.topoarg.app.location.GnssSource
 import com.topoarg.app.settings.Prefs
 import kotlin.math.cos
 import kotlin.math.sqrt
@@ -38,7 +40,29 @@ private const val METERS_PER_DEG = 111_320.0
 
 class MeasureViewModel(app: Application) : AndroidViewModel(app) {
 
-    val engine = GnssEngine(app)
+    var source: GnssSource = createSource()
+        private set
+    private var sourceKey: String = currentSourceKey()
+
+    private fun currentSourceKey() = "${Prefs.gnssSource}:${Prefs.btDeviceAddress}"
+
+    private fun createSource(): GnssSource =
+        if (Prefs.gnssSource == Prefs.SOURCE_BLUETOOTH && Prefs.btDeviceAddress.isNotEmpty()) {
+            BluetoothNmeaSource(getApplication(), Prefs.btDeviceAddress)
+        } else {
+            GnssEngine(getApplication())
+        }
+
+    /** Recrea la fuente si cambió la configuración (interno ↔ Bluetooth). */
+    fun ensureSource(): GnssSource {
+        val key = currentSourceKey()
+        if (key != sourceKey) {
+            source.stop()
+            source = createSource()
+            sourceKey = key
+        }
+        return source
+    }
 
     private val _averaging = MutableLiveData<AveragingState?>(null)
     val averaging: LiveData<AveragingState?> get() = _averaging
@@ -125,7 +149,7 @@ class MeasureViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     override fun onCleared() {
-        engine.stop()
+        source.stop()
         super.onCleared()
     }
 }

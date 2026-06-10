@@ -8,6 +8,7 @@ import com.topoarg.app.crs.CoordinateConverter
 import com.topoarg.app.crs.CrsCatalog
 import com.topoarg.app.data.SurveyPoint
 import com.topoarg.app.databinding.ItemPointBinding
+import com.topoarg.app.location.FixQuality
 import com.topoarg.app.settings.Prefs
 import com.topoarg.app.util.Format
 
@@ -50,7 +51,10 @@ class PointsAdapter(
             } else {
                 "${Format.dms(p.lat, true)}  ${Format.dms(p.lon, false)}"
             }
-            binding.tvMeta.text = binding.root.context.getString(
+            val quality = FixQuality.fromGga(p.fixQuality)
+            val qualityPrefix =
+                if (quality != FixQuality.UNKNOWN) "${quality.label} · " else ""
+            binding.tvMeta.text = qualityPrefix + binding.root.context.getString(
                 R.string.point_meta,
                 Format.acc(p.accuracy), p.samples, crs.name
             )

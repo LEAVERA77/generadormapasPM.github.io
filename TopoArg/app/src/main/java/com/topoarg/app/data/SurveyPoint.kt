@@ -22,5 +22,7 @@ data class SurveyPoint(
     /** Desvío estándar horizontal del promediado (m), 0 si fue instantáneo. */
     val stdHorizontal: Double,
     /** Época de la medición (epoch millis). */
-    val timestamp: Long
+    val timestamp: Long,
+    /** Calidad del fix (valor GGA): 1 autónomo, 2 DGNSS, 4 RTK fijo, 5 RTK flotante… */
+    val fixQuality: Int = -1
 )

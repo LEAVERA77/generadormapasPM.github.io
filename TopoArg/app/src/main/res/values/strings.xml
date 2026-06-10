@@ -13,6 +13,10 @@
     <string name="waiting_fix">Buscando satélites…</string>
     <string name="satellites_format">Satélites: %1$d en uso / %2$d visibles</string>
     <string name="accuracy_format">Precisión H: %1$s · V: %2$s</string>
+    <string name="fix_quality_format">Solución: %1$s</string>
+    <string name="ellipsoidal_format">h elipsoidal: %1$s</string>
+    <string name="orthometric_format">H s.n.m. (geoide): %1$s</string>
+    <string name="orthometric_unavailable">H s.n.m.: fuera de la grilla de geoide</string>
     <string name="wgs84_position">Posición WGS84 (GPS)</string>
     <string name="north_format">X (Norte): %1$s</string>
     <string name="east_format">Y (Este): %1$s</string>
@@ -37,8 +41,10 @@
     <string name="point_saved">Punto guardado.</string>
     <string name="point_name">Nombre</string>
     <string name="point_description">Descripción / código</string>
-    <string name="save_summary_projected">%1$s\nX (Norte): %2$s\nY (Este): %3$s\nh elipsoidal: %4$s\nMuestras: %5$d</string>
-    <string name="save_summary_geographic">%1$s\nLat: %2$s\nLon: %3$s\nh elipsoidal: %4$s\nMuestras: %5$d</string>
+    <string name="save_summary_projected">%1$s\nX (Norte): %2$s\nY (Este): %3$s\n%4$s\nMuestras: %5$d</string>
+    <string name="save_summary_geographic">%1$s\nLat: %2$s\nLon: %3$s\n%4$s\nMuestras: %5$d</string>
+    <string name="save_height_both">h elipsoidal: %1$s\nH s.n.m. (cota): %2$s</string>
+    <string name="save_height_ellipsoidal">h elipsoidal: %1$s</string>
 
     <string name="points_count">%1$d puntos almacenados</string>
     <string name="no_points">Todavía no hay puntos medidos.\nUsá la pestaña Medición para tomar el primero.</string>
@@ -56,6 +62,17 @@
     <string name="share_via">Compartir archivo con…</string>
     <string name="export_error">Error al exportar: %1$s</string>
 
+    <string name="setting_source">Fuente GNSS</string>
+    <string name="source_internal">GNSS interno del teléfono</string>
+    <string name="source_bluetooth">Receptor externo Bluetooth (NMEA / RTK)</string>
+    <string name="pick_bt_device">Elegir receptor emparejado</string>
+    <string name="bt_none_selected">Ningún receptor seleccionado</string>
+    <string name="bt_selected">Receptor: %1$s</string>
+    <string name="bt_no_adapter">Este equipo no tiene Bluetooth.</string>
+    <string name="bt_disabled">El Bluetooth está desactivado.</string>
+    <string name="bt_no_paired">No hay dispositivos emparejados. Emparejá el receptor desde los ajustes de Bluetooth del teléfono y volvé a intentar.</string>
+    <string name="bt_permission_needed">Se necesita el permiso de dispositivos cercanos (Bluetooth) para listar receptores.</string>
+    <string name="source_help">El receptor externo debe emitir NMEA 0183 por puerto serie Bluetooth (SPP): Emlid Reach, South, ComNav, Stonex, Garmin GLO, etc. La calidad de la solución (RTK Fijo/Flotante, DGNSS) se lee de la sentencia GGA y la precisión de la GST.</string>
     <string name="setting_crs">Sistema de coordenadas de trabajo</string>
     <string name="setting_auto_faja">Faja Gauss-Krüger automática</string>
     <string name="setting_auto_faja_help">Si está activado, la faja (1 a 7) se elige sola según la longitud actual del receptor, manteniendo el datum elegido.</string>

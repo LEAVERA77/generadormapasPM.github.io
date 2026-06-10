@@ -10,7 +10,7 @@ class PointDb(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VE
 
     companion object {
         private const val DB_NAME = "topoarg.db"
-        private const val DB_VERSION = 1
+        private const val DB_VERSION = 2
         private const val TABLE = "points"
     }
 
@@ -28,14 +28,17 @@ class PointDb(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VE
                 vertical_accuracy REAL NOT NULL DEFAULT 0,
                 samples INTEGER NOT NULL DEFAULT 1,
                 std_horizontal REAL NOT NULL DEFAULT 0,
-                timestamp INTEGER NOT NULL
+                timestamp INTEGER NOT NULL,
+                fix_quality INTEGER NOT NULL DEFAULT -1
             )
             """.trimIndent()
         )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Única versión por ahora.
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE $TABLE ADD COLUMN fix_quality INTEGER NOT NULL DEFAULT -1")
+        }
     }
 
     fun insert(p: SurveyPoint): Long {
@@ -50,6 +53,7 @@ class PointDb(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VE
             put("samples", p.samples)
             put("std_horizontal", p.stdHorizontal)
             put("timestamp", p.timestamp)
+            put("fix_quality", p.fixQuality)
         }
         return writableDatabase.insert(TABLE, null, cv)
     }
@@ -98,6 +102,7 @@ class PointDb(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VE
         verticalAccuracy = getFloat(getColumnIndexOrThrow("vertical_accuracy")),
         samples = getInt(getColumnIndexOrThrow("samples")),
         stdHorizontal = getDouble(getColumnIndexOrThrow("std_horizontal")),
-        timestamp = getLong(getColumnIndexOrThrow("timestamp"))
+        timestamp = getLong(getColumnIndexOrThrow("timestamp")),
+        fixQuality = getInt(getColumnIndexOrThrow("fix_quality"))
     )
 }

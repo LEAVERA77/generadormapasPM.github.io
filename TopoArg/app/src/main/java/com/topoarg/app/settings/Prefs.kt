@@ -11,6 +11,12 @@ object Prefs {
     private const val KEY_AUTO_FAJA = "auto_faja"
     private const val KEY_SAMPLES = "avg_samples"
     private const val KEY_MAX_ACC = "max_accuracy"
+    private const val KEY_SOURCE = "gnss_source"
+    private const val KEY_BT_ADDRESS = "bt_address"
+    private const val KEY_BT_NAME = "bt_name"
+
+    const val SOURCE_INTERNAL = "internal"
+    const val SOURCE_BLUETOOTH = "bluetooth"
 
     private lateinit var sp: SharedPreferences
 
@@ -37,4 +43,19 @@ object Prefs {
     var maxAccuracy: Float
         get() = sp.getFloat(KEY_MAX_ACC, 10f)
         set(value) = sp.edit().putFloat(KEY_MAX_ACC, value.coerceIn(0.1f, 500f)).apply()
+
+    /** Fuente GNSS: chip interno o receptor externo Bluetooth NMEA. */
+    var gnssSource: String
+        get() = sp.getString(KEY_SOURCE, SOURCE_INTERNAL) ?: SOURCE_INTERNAL
+        set(value) = sp.edit().putString(KEY_SOURCE, value).apply()
+
+    /** Dirección MAC del receptor Bluetooth emparejado. */
+    var btDeviceAddress: String
+        get() = sp.getString(KEY_BT_ADDRESS, "") ?: ""
+        set(value) = sp.edit().putString(KEY_BT_ADDRESS, value).apply()
+
+    /** Nombre del receptor Bluetooth (solo para mostrar). */
+    var btDeviceName: String
+        get() = sp.getString(KEY_BT_NAME, "") ?: ""
+        set(value) = sp.edit().putString(KEY_BT_NAME, value).apply()
 }

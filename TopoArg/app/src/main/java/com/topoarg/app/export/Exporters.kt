@@ -3,6 +3,8 @@ package com.topoarg.app.export
 import com.topoarg.app.crs.CoordinateConverter
 import com.topoarg.app.crs.CrsDef
 import com.topoarg.app.data.SurveyPoint
+import com.topoarg.app.geoid.GeoidModel
+import com.topoarg.app.location.FixQuality
 import java.time.Instant
 import java.util.Locale
 
@@ -40,11 +42,21 @@ object Exporters {
         .replace("\\", "\\\\").replace("\"", "\\\"")
         .replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t")
 
+    /** Altura ortométrica si el geoide está disponible, o null. */
+    private fun ortho(p: SurveyPoint): Double? =
+        GeoidModel.orthometric(p.lat, p.lon, p.altitude)
+
+    /** Cota a usar en formatos de elevación s.n.m. (KML/GPX/DXF). */
+    private fun elevation(p: SurveyPoint): Double = ortho(p) ?: p.altitude
+
+    private fun fixLabel(p: SurveyPoint): String = FixQuality.fromGga(p.fixQuality).label
+
     fun csv(points: List<SurveyPoint>, crs: CrsDef): String {
         val sb = StringBuilder()
         sb.append("Nombre,Descripcion,FechaHora,CRS,")
         if (crs.projected) sb.append("Norte_X_m,Este_Y_m,") else sb.append("Latitud,Longitud,")
-        sb.append("Lat_WGS84,Lon_WGS84,h_elipsoidal_m,Precision_m,Muestras,DesvioStd_m\r\n")
+        sb.append("Lat_WGS84,Lon_WGS84,h_elipsoidal_m,H_ortometrica_m,")
+        sb.append("Precision_m,Muestras,DesvioStd_m,CalidadFix\r\n")
         for (p in points) {
             val c = CoordinateConverter.fromWgs84(p.lat, p.lon, crs)
             sb.append('"').append(p.name.replace("\"", "\"\"")).append("\",")
@@ -59,9 +71,11 @@ object Exporters {
             sb.append(num(p.lat, 8)).append(',')
             sb.append(num(p.lon, 8)).append(',')
             sb.append(num(p.altitude)).append(',')
+            sb.append(ortho(p)?.let { num(it) } ?: "").append(',')
             sb.append(num(p.accuracy.toDouble(), 2)).append(',')
             sb.append(p.samples).append(',')
-            sb.append(num(p.stdHorizontal)).append("\r\n")
+            sb.append(num(p.stdHorizontal)).append(',')
+            sb.append(fixLabel(p)).append("\r\n")
         }
         return sb.toString()
     }
@@ -75,13 +89,14 @@ object Exporters {
             sb.append("  <Placemark>\n")
             sb.append("    <name>").append(esc(p.name)).append("</name>\n")
             sb.append("    <description>").append(esc(p.description))
+                .append(" | Solución: ").append(fixLabel(p))
                 .append(" | Precisión: ").append(num(p.accuracy.toDouble(), 2))
                 .append(" m | Muestras: ").append(p.samples)
                 .append("</description>\n")
             sb.append("    <Point><altitudeMode>absolute</altitudeMode><coordinates>")
                 .append(num(p.lon, 8)).append(',')
                 .append(num(p.lat, 8)).append(',')
-                .append(num(p.altitude))
+                .append(num(elevation(p)))
                 .append("</coordinates></Point>\n")
             sb.append("  </Placemark>\n")
         }
@@ -99,7 +114,7 @@ object Exporters {
         for (p in points) {
             sb.append("  <wpt lat=\"").append(num(p.lat, 8))
                 .append("\" lon=\"").append(num(p.lon, 8)).append("\">\n")
-            sb.append("    <ele>").append(num(p.altitude)).append("</ele>\n")
+            sb.append("    <ele>").append(num(elevation(p))).append("</ele>\n")
             sb.append("    <time>").append(Instant.ofEpochMilli(p.timestamp)).append("</time>\n")
             sb.append("    <name>").append(esc(p.name)).append("</name>\n")
             if (p.description.isNotBlank()) {
@@ -130,6 +145,10 @@ object Exporters {
                 sb.append("        \"este_y\": ").append(num(c.east)).append(",\n")
             }
             sb.append("        \"h_elipsoidal\": ").append(num(p.altitude)).append(",\n")
+            ortho(p)?.let {
+                sb.append("        \"h_ortometrica\": ").append(num(it)).append(",\n")
+            }
+            sb.append("        \"calidad_fix\": \"").append(jsonEsc(fixLabel(p))).append("\",\n")
             sb.append("        \"precision_m\": ").append(num(p.accuracy.toDouble(), 2)).append(",\n")
             sb.append("        \"muestras\": ").append(p.samples).append("\n")
             sb.append("      }\n    }")
@@ -142,6 +161,7 @@ object Exporters {
     /**
      * DXF R12 mínimo: un POINT y un TEXT por punto, en coordenadas del CRS
      * proyectado elegido (Este = X CAD, Norte = Y CAD, convención de dibujo).
+     * La Z es la cota s.n.m. si el geoide está disponible.
      */
     fun dxf(points: List<SurveyPoint>, crs: CrsDef): String {
         val sb = StringBuilder()
@@ -153,7 +173,7 @@ object Exporters {
             sb.append("0\nPOINT\n8\nPUNTOS\n")
             sb.append("10\n").append(num(x)).append('\n')
             sb.append("20\n").append(num(y)).append('\n')
-            sb.append("30\n").append(num(p.altitude)).append('\n')
+            sb.append("30\n").append(num(elevation(p))).append('\n')
             sb.append("0\nTEXT\n8\nETIQUETAS\n")
             sb.append("10\n").append(num(x + 0.5)).append('\n')
             sb.append("20\n").append(num(y + 0.5)).append('\n')

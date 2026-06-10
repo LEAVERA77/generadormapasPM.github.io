@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TopoArg</string>
+
+    <string name="tab_measure">Medición</string>
+    <string name="tab_points">Puntos</string>
+    <string name="tab_export">Exportar</string>
+    <string name="tab_settings">Ajustes</string>
+
+    <string name="permission_needed">Se necesita el permiso de ubicación precisa para medir puntos.</string>
+
+    <string name="gnss_status">Estado GNSS</string>
+    <string name="waiting_fix">Buscando satélites…</string>
+    <string name="satellites_format">Satélites: %1$d en uso / %2$d visibles</string>
+    <string name="accuracy_format">Precisión H: %1$s · V: %2$s</string>
+    <string name="fix_quality_format">Solución: %1$s</string>
+    <string name="ellipsoidal_format">h elipsoidal: %1$s</string>
+    <string name="orthometric_format">H s.n.m. (geoide): %1$s</string>
+    <string name="orthometric_unavailable">H s.n.m.: fuera de la grilla de geoide</string>
+    <string name="wgs84_position">Posición WGS84 (GPS)</string>
+    <string name="north_format">X (Norte): %1$s</string>
+    <string name="east_format">Y (Este): %1$s</string>
+    <string name="lat_format">Latitud: %1$s</string>
+    <string name="lon_format">Longitud: %1$s</string>
+
+    <string name="take_point">Tomar punto</string>
+    <string name="start_averaging">Promediar punto</string>
+    <string name="stop_averaging">Detener promediado</string>
+    <string name="averaging_status">Promediando: %1$d / %2$d épocas (%3$d rechazadas)</string>
+    <string name="averaging_detail">Media: %1$s  %2$s\nDesvío estándar: %3$s</string>
+    <string name="averaging_waiting">Esperando épocas con precisión suficiente…</string>
+    <string name="no_fix_yet">Todavía no hay posición GPS.</string>
+
+    <string name="save_point_title">Guardar punto</string>
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="close">Cerrar</string>
+    <string name="edit">Editar</string>
+    <string name="delete">Eliminar</string>
+    <string name="delete_confirm">¿Eliminar el punto \"%1$s\"?</string>
+    <string name="point_saved">Punto guardado.</string>
+    <string name="point_name">Nombre</string>
+    <string name="point_description">Descripción / código</string>
+    <string name="save_summary_projected">%1$s\nX (Norte): %2$s\nY (Este): %3$s\n%4$s\nMuestras: %5$d</string>
+    <string name="save_summary_geographic">%1$s\nLat: %2$s\nLon: %3$s\n%4$s\nMuestras: %5$d</string>
+    <string name="save_height_both">h elipsoidal: %1$s\nH s.n.m. (cota): %2$s</string>
+    <string name="save_height_ellipsoidal">h elipsoidal: %1$s</string>
+
+    <string name="points_count">%1$d puntos almacenados</string>
+    <string name="no_points">Todavía no hay puntos medidos.\nUsá la pestaña Medición para tomar el primero.</string>
+    <string name="point_meta">Precisión: %1$s · Muestras: %2$d · %3$s</string>
+    <string name="detail_header">Coordenadas en todos los sistemas argentinos</string>
+
+    <string name="export_format">Formato de exportación</string>
+    <string name="format_csv">CSV (planilla, con Gauss-Krüger)</string>
+    <string name="format_kml">KML (Google Earth)</string>
+    <string name="format_gpx">GPX (intercambio GPS)</string>
+    <string name="format_geojson">GeoJSON (SIG / QGIS)</string>
+    <string name="format_dxf">DXF (AutoCAD, en Gauss-Krüger)</string>
+    <string name="export_crs_note">CSV y DXF se generan en el sistema de trabajo: %1$s.\nKML, GPX y GeoJSON usan WGS84 según su especificación.</string>
+    <string name="export_and_share">Exportar y compartir</string>
+    <string name="share_via">Compartir archivo con…</string>
+    <string name="export_error">Error al exportar: %1$s</string>
+
+    <string name="setting_source">Fuente GNSS</string>
+    <string name="source_internal">GNSS interno del teléfono</string>
+    <string name="source_bluetooth">Receptor externo Bluetooth (NMEA / RTK)</string>
+    <string name="pick_bt_device">Elegir receptor emparejado</string>
+    <string name="bt_none_selected">Ningún receptor seleccionado</string>
+    <string name="bt_selected">Receptor: %1$s</string>
+    <string name="bt_no_adapter">Este equipo no tiene Bluetooth.</string>
+    <string name="bt_disabled">El Bluetooth está desactivado.</string>
+    <string name="bt_no_paired">No hay dispositivos emparejados. Emparejá el receptor desde los ajustes de Bluetooth del teléfono y volvé a intentar.</string>
+    <string name="bt_permission_needed">Se necesita el permiso de dispositivos cercanos (Bluetooth) para listar receptores.</string>
+    <string name="source_help">El receptor externo debe emitir NMEA 0183 por puerto serie Bluetooth (SPP): Emlid Reach, South, ComNav, Stonex, Garmin GLO, etc. La calidad de la solución (RTK Fijo/Flotante, DGNSS) se lee de la sentencia GGA y la precisión de la GST.</string>
+    <string name="setting_crs">Sistema de coordenadas de trabajo</string>
+    <string name="setting_auto_faja">Faja Gauss-Krüger automática</string>
+    <string name="setting_auto_faja_help">Si está activado, la faja (1 a 7) se elige sola según la longitud actual del receptor, manteniendo el datum elegido.</string>
+    <string name="setting_samples">Épocas a promediar (mediciones de 1 s)</string>
+    <string name="setting_max_accuracy">Precisión horizontal máxima aceptada (m)</string>
+    <string name="setting_note">Nota: las alturas mostradas son elipsoidales (WGS84), tal como las entrega el receptor GNSS del teléfono. Para obtener cotas sobre el nivel medio del mar hay que aplicar el modelo de geoide (GEOIDE-Ar 16 del IGN).</string>
+</resources>
